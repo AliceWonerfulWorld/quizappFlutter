@@ -8,7 +8,7 @@ import 'screens/results_screen.dart';
 import 'screens/slot_machine_screen.dart';
 import 'screens/scoreboard_screen.dart';
 import 'models/score_history.dart';
-import 'models/quiz_data.dart'; // QuizQuestion と AnswerData のためにインポート
+import 'models/quiz_data.dart'; 
 
 void main() {
   runApp(MyApp());
