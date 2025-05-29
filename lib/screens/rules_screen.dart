@@ -36,7 +36,7 @@ class RulesScreen extends StatelessWidget {
                           fontSize: 32, // フォントサイズ調整
                           fontWeight: FontWeight.bold,
                           color: Colors.white, // テキスト色を白に変更
-                          fontFamily: 'CoolFont', // ← フォントファミリーを指定
+                          fontFamily: 'MPLUSRounded1c', // フォントファミリーを変更
                           shadows: [
                             Shadow(
                               blurRadius: 3.0,
@@ -84,7 +84,7 @@ class RulesScreen extends StatelessWidget {
                         style: ElevatedButton.styleFrom( // ボタンのスタイルを調整
                           backgroundColor: Colors.white.withOpacity(0.9),
                           padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2193b0), fontFamily: 'CoolFont'), // ← フォントファミリーを指定
+                          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2193b0), fontFamily: 'MPLUSRounded1c'), // フォントファミリーを変更
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -93,7 +93,7 @@ class RulesScreen extends StatelessWidget {
                         onPressed: () {
                           Navigator.pushNamed(context, '/difficulty');
                         },
-                        child: Text('クイズを始める', style: TextStyle(color: Color(0xFF2193b0), fontFamily: 'CoolFont')), // ← フォントファミリーを指定
+                        child: Text('クイズを始める', style: TextStyle(color: Color(0xFF2193b0), fontFamily: 'MPLUSRounded1c')), // フォントファミリーを変更
                       ),
                     ),
                   ],
@@ -130,7 +130,7 @@ Widget _buildRuleCard({required IconData icon, required String text, Color iconC
                 fontSize: 17, // フォントサイズ調整
                 color: Colors.black87, // カード内のテキスト色
                 height: 1.5, // 行間調整
-                fontFamily: 'CoolFont', // ← フォントファミリーを指定
+                fontFamily: 'MPLUSRounded1c', // フォントファミリーを変更
               ),
             ),
           ),

@@ -195,25 +195,112 @@ class _DifficultyScreenState extends State<DifficultyScreen> with SingleTickerPr
   void _showDifficultyConfirmation(BuildContext context, String difficulty, String difficultyName) {
     showDialog(
       context: context,
+      barrierDismissible: false, // ダイアログ外タップで閉じないようにする
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('確認'),
-          content: Text('$difficultyNameモードで開始しますか？'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('キャンセル'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          elevation: 8,
+          backgroundColor: Colors.transparent, // Dialog自体の背景は透明にする
+          child: Container(
+            padding: EdgeInsets.all(24.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20.0),
+              gradient: LinearGradient(
+                colors: [Color(0xFF6DD5ED), Color(0xFF2193B0)], // グラデーションの色を調整
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: Offset(0, 5),
+                )
+              ],
             ),
-            TextButton(
-              child: Text('開始'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.pushNamed(context, '/countdown', arguments: difficulty);
-              },
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // コンテンツに合わせて高さを調整
+              children: <Widget>[
+                Icon(
+                  Icons.help_outline_rounded, // 確認アイコン
+                  color: Colors.white,
+                  size: 50,
+                ),
+                SizedBox(height: 20),
+                Text(
+                  '確認',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontFamily: 'MPLUSRounded1c',
+                  ),
+                ),
+                SizedBox(height: 15),
+                Text(
+                  '$difficultyNameモードで開始しますか？',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white.withOpacity(0.9),
+                    fontFamily: 'MPLUSRounded1c',
+                    height: 1.4,
+                  ),
+                ),
+                SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          side: BorderSide(color: Colors.white.withOpacity(0.7)),
+                        ),
+                      ),
+                      child: Text(
+                        'キャンセル',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontFamily: 'MPLUSRounded1c',
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        elevation: 5,
+                      ),
+                      child: Text(
+                        '開始',
+                        style: TextStyle(
+                          color: Color(0xFF2193B0), // ボタン背景に合わせたテキスト色
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'MPLUSRounded1c',
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.pushNamed(context, '/countdown', arguments: difficulty);
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );

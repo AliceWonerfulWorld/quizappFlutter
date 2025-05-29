@@ -164,34 +164,99 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
               onPressed: () async {
                 bool? shouldReturn = await showDialog<bool>(
                   context: context,
-                  builder: (context) => AlertDialog(
+                  builder: (context) => Dialog( // AlertDialogをDialogに変更
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    title: Row(
-                      children: [
-                        Icon(Icons.casino, color: Colors.amber),
-                        SizedBox(width: 10),
-                        Text('確認'),
-                      ],
-                    ),
-                    content: Text('タイトルに戻りますか？\n獲得したコインは保存されません。'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: Text('キャンセル'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                    elevation: 0,
+                    backgroundColor: Colors.transparent,
+                    child: Container(
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.purple.shade800, Colors.purple.shade600],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        child: Text('タイトルに戻る'),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            spreadRadius: 3,
+                            blurRadius: 7,
+                            offset: Offset(0, 3),
+                          )
+                        ],
                       ),
-                    ],
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.casino_rounded, color: Colors.white, size: 28),
+                              SizedBox(width: 10),
+                              Text(
+                                '確認',
+                                style: TextStyle(
+                                  fontFamily: 'MPLUSRounded1c',
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 20),
+                          Text(
+                            'タイトルに戻りますか？\n獲得したコインは保存されません。',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'MPLUSRounded1c',
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 25),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(false),
+                                child: Text(
+                                  'キャンセル',
+                                  style: TextStyle(
+                                    fontFamily: 'MPLUSRounded1c',
+                                    color: Colors.white70,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.of(context).pop(true),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber.shade700,
+                                  padding: EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  elevation: 5,
+                                ),
+                                child: Text(
+                                  'タイトルに戻る',
+                                  style: TextStyle(
+                                    fontFamily: 'MPLUSRounded1c',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 );
                 if (shouldReturn == true) {
