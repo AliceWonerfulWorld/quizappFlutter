@@ -377,34 +377,109 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
             onPressed: () async {
               bool? shouldReturn = await showDialog<bool>(
                 context: context,
-                builder: (context) => AlertDialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  title: Row(
-                    children: [
-                      Icon(Icons.warning_amber_rounded, color: Colors.amber),
-                      SizedBox(width: 10),
-                      Text('確認'),
-                    ],
-                  ),
-                  content: Text('タイトルに戻りますか？\n進行中のクイズが終了し、スコアは保存されません。'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: Text('キャンセル'),
+                barrierDismissible: false,
+                builder: (BuildContext context) {
+                  return Dialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
                     ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(true),
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                    elevation: 8,
+                    backgroundColor: Colors.transparent,
+                    child: Container(
+                      padding: EdgeInsets.all(24.0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.0),
+                        gradient: LinearGradient(
+                          colors: [Color(0xFFF857A6), Color(0xFFFF5858)], // 警告や注意を促すようなグラデーション
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: Offset(0, 5),
+                          )
+                        ],
                       ),
-                      child: Text('タイトルに戻る'),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Icon(
+                            Icons.exit_to_app_rounded, // 終了や戻るを連想させるアイコン
+                            color: Colors.white,
+                            size: 50,
+                          ),
+                          SizedBox(height: 20),
+                          Text(
+                            '確認',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontFamily: 'MPLUSRounded1c',
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          Text(
+                            'タイトルに戻りますか？\n進行中のクイズが終了し、スコアは保存されません。',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 17,
+                              color: Colors.white.withOpacity(0.9),
+                              fontFamily: 'MPLUSRounded1c',
+                              height: 1.4,
+                            ),
+                          ),
+                          SizedBox(height: 30),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: <Widget>[
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                    side: BorderSide(color: Colors.white.withOpacity(0.7)),
+                                  ),
+                                ),
+                                child: Text(
+                                  'キャンセル',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontFamily: 'MPLUSRounded1c',
+                                  ),
+                                ),
+                                onPressed: () => Navigator.of(context).pop(false),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  elevation: 5,
+                                ),
+                                child: Text(
+                                  'タイトルに戻る',
+                                  style: TextStyle(
+                                    color: Color(0xFFF857A6), // グラデーションに合わせた色
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'MPLUSRounded1c',
+                                  ),
+                                ),
+                                onPressed: () => Navigator.of(context).pop(true),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  );
+                },
               );
               if (shouldReturn == true) {
                 Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);

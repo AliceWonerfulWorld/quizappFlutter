@@ -21,6 +21,7 @@ class MyApp extends StatelessWidget {
       title: 'Quiz App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        fontFamily: 'MPLUSRounded1c', // この行を追加
       ),
       initialRoute: '/',
       routes: {
