@@ -2,19 +2,26 @@
 # https://github.com/firebase/firebase-tools
 
 name: Deploy to Firebase Hosting on merge
-on:
+'on':
   push:
     branches:
-      - main
+      - develop
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: flutter build web
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_QUIZMASTERS_7AECD }}
+       - uses: actions/checkout@v4
+       - name: Set up Flutter
+         uses: subosito/flutter-action@v2 # https://github.com/subosito/flutter-action
+         with:
+           channel: 'stable'
+           flutter-version: 3.16.9
+       - name: Get Flutter dependencies
+         run: flutter pub get
+         - run: flutter build web
+                   - uses: FirebaseExtended/action-hosting-deploy@v0
+         with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_HOGE_HOGE }}'
           channelId: live
-          projectId: quizmasters-7aecd
+          projectId: hoge-hoge-12345
