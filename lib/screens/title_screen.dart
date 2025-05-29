@@ -287,7 +287,7 @@ class _TitleScreenState extends State<TitleScreen> with TickerProviderStateMixin
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w300,
-                                color: Colors.white.withOpacity(0.85),
+                                color: Colors.black.withOpacity(0.85),
                                 letterSpacing: 1.5,
                               ),
                             ),
