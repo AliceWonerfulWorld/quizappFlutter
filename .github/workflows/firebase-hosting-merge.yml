@@ -21,6 +21,6 @@ jobs:
        - uses: FirebaseExtended/action-hosting-deploy@v0
          with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_HOGE_HOGE }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_QUIZMASTERS }}'
           channelId: live
-          projectId: hoge-hoge-12345
+          projectId: quizmasters-7aecd
