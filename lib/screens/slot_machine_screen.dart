@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
+import '../coin_manager.dart'; // CoinManagerをインポート
 
 class SlotMachineScreen extends StatefulWidget {
   @override
@@ -15,11 +16,12 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
   late List<Timer> reelTimers;
   late AnimationController _spinButtonController;
   bool _isSpinning = false;
-  int _coins = 100; // 初期コイン数
+  int _coins = 0; // CoinManagerから読み込むため初期値は0に
 
   @override
   void initState() {
     super.initState();
+    _loadCoins(); // コイン数を読み込む
     reelIndices = List<int>.generate(3, (index) => random.nextInt(symbols.length));
     reelStopped = List<bool>.filled(3, false);
     reelTimers = [];
@@ -28,6 +30,13 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
+  }
+
+  Future<void> _loadCoins() async {
+    _coins = await CoinManager.getCoins();
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Timer startReel(int reelIndex) {
@@ -41,7 +50,7 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
     });
   }
 
-  void startSpinning() {
+  Future<void> startSpinning() async { // Future<void> と async を追加
     if (_coins < 10) {
       showDialog(
         context: context,
@@ -59,21 +68,43 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
       return;
     }
 
-    setState(() {
-      _isSpinning = true;
-      _coins -= 10; // 10コインを消費
-      reelStopped = List<bool>.filled(3, false);
-      reelTimers.forEach((timer) => timer.cancel());
-      reelTimers = List<Timer>.generate(3, (index) => startReel(index));
-    });
+    bool success = await CoinManager.spendCoins(10); // CoinManagerを使用してコインを消費し、結果を受け取る
+    if (success) {
+      await _loadCoins(); // コイン数を再読み込みしてUIを更新
 
-    // リールを自動的に停止
-    for (int i = 0; i < 3; i++) {
-      Future.delayed(Duration(seconds: 2 + i), () {
-        if (mounted && !reelStopped[i]) {
-          stopReel(i);
-        }
+      setState(() {
+        _isSpinning = true;
+        // _coins -= 10; // CoinManagerで管理するため削除
+        reelStopped = List<bool>.filled(3, false);
+        reelTimers.forEach((timer) => timer.cancel());
+        reelTimers = List<Timer>.generate(3, (index) => startReel(index));
       });
+
+      // リールを自動的に停止
+      for (int i = 0; i < 3; i++) {
+        Future.delayed(Duration(seconds: 2 + i), () {
+          if (mounted && !reelStopped[i]) {
+            stopReel(i);
+          }
+        });
+      }
+    } else {
+      // コイン消費に失敗した場合の処理（例：エラーメッセージ表示）
+      if (mounted) { // mountedチェックを追加
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('エラー'),
+            content: Text('コインの処理に失敗しました。'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
     }
   }
 
@@ -89,13 +120,15 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
     }
   }
 
-  void checkWin() {
+  Future<void> checkWin() async { // Future<void> と async を追加
     // 全てのリールが同じシンボルの場合
     if (reelIndices.every((index) => index == reelIndices[0])) {
       int winAmount = calculateWinAmount(reelIndices[0]);
-      setState(() {
-        _coins += winAmount;
-      });
+      await CoinManager.addCoins(winAmount); // CoinManagerを使用してコインを追加
+      await _loadCoins(); // コイン数を再読み込みしてUIを更新
+      // setState(() { // _loadCoins内でsetStateが呼ばれるため不要
+      //   _coins += winAmount;
+      // });
       showWinDialog(winAmount);
     }
   }

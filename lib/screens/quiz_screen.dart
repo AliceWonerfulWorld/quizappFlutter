@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:audioplayers/audioplayers.dart'; // audioplayersをインポート
 import '../models/score_history.dart';
 import '../models/quiz_data.dart';
 import '../services/quiz_service.dart';
 import 'results_screen.dart'; // ResultsScreenをインポート
+import '../coin_manager.dart'; // CoinManagerをインポート
 
 class QuizScreen extends StatefulWidget {
   final String difficulty;
@@ -32,6 +34,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
   late Lifelines _lifelines = Lifelines();
   List<int> _hiddenAnswerIndices = [];
   List<AnswerData> _userAnswers = []; // ユーザーの回答履歴
+  final AudioPlayer _audioPlayer = AudioPlayer(); // AudioPlayerのインスタンスを追加
 
   @override
   void initState() {
@@ -118,6 +121,9 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
     _userAnswers.add(AnswerData(isCorrect: _isCorrect!)); // 回答結果を記録
     if (_isCorrect!) {
       _score++;
+      _playCorrectSound(); // 正解音を再生
+    } else {
+      _playIncorrectSound(); // 不正解音を再生
     }
     
     setState(() {});
@@ -133,62 +139,96 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: isCorrect ? Colors.green.shade50 : Colors.red.shade50,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            isCorrect ? '正解！' : '不正解',
-            style: TextStyle(
-              color: isCorrect ? Colors.green : Colors.red,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'CoolFont',
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+          elevation: 8,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(24.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20.0),
+              gradient: LinearGradient(
+                colors: isCorrect
+                    ? [Colors.green.shade300, Colors.green.shade600]
+                    : [Colors.red.shade300, Colors.red.shade600],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: Offset(0, 5),
+                ),
+              ],
             ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              isCorrect
-                  ? Icon(Icons.check_circle, color: Colors.green, size: 80)
-                  : Icon(Icons.cancel, color: Colors.red, size: 80),
-              SizedBox(height: 16),
-              if (!isCorrect)
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
                 Text(
-                  '正解は: $correctAnswer',
+                  isCorrect ? '正解！' : '不正解',
                   style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.grey[800],
-                    fontFamily: 'CoolFont',
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'MPLUSRounded1c',
                   ),
                 ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();                setState(() {
-                  _questionIndex++;
-                  _isAnswerLocked = false;
-                  _selectedAnswerIndex = null;
-                  _hiddenAnswerIndices = []; // 50:50の効果をリセット
-                  if (_questionIndex >= _questions.length) {
-                    _saveScore();
-                    _finishQuiz(); // 結果画面への遷移を修正
-                  } else {
-                    _startTimer();
-                  }
-                });
-              },
-              child: Text(
-                '次へ',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontFamily: 'CoolFont',
-                  color: _getDifficultyColor(),
+                SizedBox(height: 20),
+                Icon(
+                  isCorrect ? Icons.check_circle_outline_rounded : Icons.highlight_off_rounded,
+                  color: Colors.white,
+                  size: 80,
                 ),
-              ),
+                SizedBox(height: 20),
+                if (!isCorrect)
+                  Text(
+                    '正解は: $correctAnswer',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white.withOpacity(0.9),
+                      fontFamily: 'MPLUSRounded1c',
+                    ),
+                  ),
+                SizedBox(height: 24),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15.0),
+                    ),
+                    elevation: 5,
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    setState(() {
+                      _questionIndex++;
+                      _isAnswerLocked = false;
+                      _selectedAnswerIndex = null;
+                      _hiddenAnswerIndices = []; // 50:50の効果をリセット
+                      if (_questionIndex >= _questions.length) {
+                        _saveScore();
+                        _finishQuiz();
+                      } else {
+                        _startTimer();
+                      }
+                    });
+                  },
+                  child: Text(
+                    '次へ',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontFamily: 'MPLUSRounded1c',
+                      fontWeight: FontWeight.bold,
+                      color: isCorrect ? Colors.green.shade700 : Colors.red.shade700,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
@@ -198,6 +238,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
   void dispose() {
     _timer?.cancel(); // nullチェックを追加
     _timerController.dispose();
+    _audioPlayer.dispose(); // AudioPlayerのリソースを解放
     super.dispose();
   }
   void _saveScore() {
@@ -212,8 +253,38 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
     scoreHistoryList.add(scoreEntry);
   }
 
-  void _finishQuiz() {
+  Future<void> _playCorrectSound() async {
+    // TODO: 正解時の効果音ファイルパスを指定してください (例: 'sounds/correct.mp3')
+    // await _audioPlayer.play(AssetSource('YOUR_CORRECT_SOUND_FILE_PATH'));
+    // 例:
+    // await _audioPlayer.play(AssetSource('sounds/correct.mp3'));
+    // 現在はプレースホルダーとしてログ出力をします
+    print("Playing correct sound");
+  }
+
+  Future<void> _playIncorrectSound() async {
+    // TODO: 不正解時の効果音ファイルパスを指定してください (例: 'sounds/incorrect.mp3')
+    // await _audioPlayer.play(AssetSource('YOUR_INCORRECT_SOUND_FILE_PATH'));
+    // 例:
+    // await _audioPlayer.play(AssetSource('sounds/incorrect.mp3'));
+    // 現在はプレースホルダーとしてログ出力をします
+    print("Playing incorrect sound");
+  }
+
+  Future<void> _finishQuiz() async { // Future<void> に変更し、async を追加
     _timer?.cancel();
+
+    // コイン計算
+    int earnedCoins = _score * 5; // 1問正解あたり5コイン
+    if (_score == _questions.length && _questions.isNotEmpty) {
+      earnedCoins += 50; // 全問正解ボーナス
+    }
+
+    if (earnedCoins > 0) {
+      await CoinManager.addCoins(earnedCoins); // CoinManagerを使用してコインを追加
+    }
+
+    // 結果画面へ遷移
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -603,7 +674,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
                 color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'CoolFont',
+                fontFamily: 'MPLUSRounded1c', // Updated font
               ),
             ),
           ],
@@ -614,7 +685,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
           style: TextStyle(
             color: Colors.white,
             fontSize: 18,
-            fontFamily: 'CoolFont',
+            fontFamily: 'MPLUSRounded1c', // Updated font
           ),
         ),
       ],
@@ -635,7 +706,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
             fontWeight: FontWeight.bold,
             color: Colors.grey[800],
             height: 1.5,
-            fontFamily: 'CoolFont',
+            fontFamily: 'MPLUSRounded1c', // Updated font
           ),
           textAlign: TextAlign.center,
         ),
@@ -696,7 +767,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
                             style: TextStyle(
                               color: _getDifficultyColor(),
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'CoolFont',
+                              fontFamily: 'MPLUSRounded1c', // Updated font
                             ),
                           ),
                         ),
@@ -708,7 +779,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.grey[800],
-                            fontFamily: 'CoolFont',
+                            fontFamily: 'MPLUSRounded1c', // Updated font
                           ),
                         ),
                       ),
