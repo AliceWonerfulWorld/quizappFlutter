@@ -13,7 +13,7 @@ class QuizService {
       // 問題をシャッフル
       final questions = quizData.questions;
       questions.shuffle();
-      return questions;
+      return questions.take(10).toList();
     } catch (e) {
       print('Error loading questions: $e');
       throw Exception('Failed to load quiz questions');
