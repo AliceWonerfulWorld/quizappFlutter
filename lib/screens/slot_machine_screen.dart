@@ -54,15 +54,83 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
     if (_coins < 10) {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text('コインが足りません'),
-          content: Text('10コイン必要です。'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
+        barrierDismissible: false, // 背景をタップしても閉じないようにする
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          elevation: 0, // 影を消す
+          backgroundColor: Colors.transparent, // 背景を透明にする
+          child: Container(
+            padding: EdgeInsets.all(24.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20.0),
+              gradient: LinearGradient(
+                colors: [Colors.orange.shade700, Colors.amber.shade500], // 警告やコイン不足をイメージさせる色
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: Offset(0, 5),
+                ),
+              ],
             ),
-          ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(
+                  Icons.warning_amber_rounded, // 警告アイコン
+                  color: Colors.white,
+                  size: 50,
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'コインが足りません',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'MPLUSRounded1c', // アプリ内で使用しているフォントに合わせる
+                  ),
+                ),
+                SizedBox(height: 15),
+                Text(
+                  'スピンするには10コイン必要です。',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: Colors.white.withOpacity(0.9),
+                    fontFamily: 'MPLUSRounded1c',
+                    height: 1.4,
+                  ),
+                ),
+                SizedBox(height: 30),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15.0),
+                    ),
+                    elevation: 5,
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'OK',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontFamily: 'MPLUSRounded1c',
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange.shade800, // ボタンのテキスト色
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       );
       return;
@@ -74,20 +142,10 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
 
       setState(() {
         _isSpinning = true;
-        // _coins -= 10; // CoinManagerで管理するため削除
         reelStopped = List<bool>.filled(3, false);
         reelTimers.forEach((timer) => timer.cancel());
         reelTimers = List<Timer>.generate(3, (index) => startReel(index));
       });
-
-      // リールを自動的に停止
-      for (int i = 0; i < 3; i++) {
-        Future.delayed(Duration(seconds: 2 + i), () {
-          if (mounted && !reelStopped[i]) {
-            stopReel(i);
-          }
-        });
-      }
     } else {
       // コイン消費に失敗した場合の処理（例：エラーメッセージ表示）
       if (mounted) { // mountedチェックを追加
@@ -414,7 +472,7 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
                           Icon(Icons.play_circle_filled, size: 30),
                           SizedBox(width: 10),
                           Text(
-                            'スピン (10コイン)',
+                            _isSpinning ? '回転中...' : 'スピン (10コイン)',
                             style: TextStyle(fontSize: 20),
                           ),
                         ],
@@ -422,6 +480,28 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
                     ),
                   ],
                 ),
+                SizedBox(height: 20),
+                // リール停止ボタンを追加
+                if (_isSpinning)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(3, (index) {
+                      return ElevatedButton(
+                        onPressed: reelStopped[index] ? null : () => stopReel(index),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: Text(
+                          'リール ${index + 1} 停止',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      );
+                    }),
+                  ),
                 SizedBox(height: 20),
                 Container(
                   padding: EdgeInsets.all(15),
@@ -454,7 +534,7 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
                         children: [
                           _buildPayoutRow('🍒🍒🍒', '50コイン'),
                           SizedBox(width: 20),
-                          _buildPayoutRow('その他', '30コイン'),
+                          _buildPayoutRow('その他', '30コイン')
                         ],
                       ),
                     ],

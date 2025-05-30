@@ -35,6 +35,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
   List<int> _hiddenAnswerIndices = [];
   List<AnswerData> _userAnswers = []; // ユーザーの回答履歴
   final AudioPlayer _audioPlayer = AudioPlayer(); // AudioPlayerのインスタンスを追加
+  List<String> _shuffledAnswers = []; // シャッフルされた選択肢を保持するリスト
 
   @override
   void initState() {
@@ -54,10 +55,18 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
     // ModalRouteからのarguments取得は不要。widget.difficultyを使う。
     _questions = await QuizService.loadQuestions(_difficulty);
     _userAnswers = []; // クイズ開始時に回答履歴を初期化
+    _shuffleAnswers(); // 最初の質問の選択肢をシャッフル
     setState(() {
       _isLoading = false;
     });
     _startTimer(); // 最初の質問表示時にタイマーを開始
+  }
+
+  void _shuffleAnswers() {
+    if (_questions.isNotEmpty && _questionIndex < _questions.length) {
+      _shuffledAnswers = List<String>.from(_questions[_questionIndex].answers);
+      _shuffledAnswers.shuffle();
+    }
   }
 
   void _startTimer() {
@@ -80,6 +89,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
   void _handleTimeout() {
     _isAnswerLocked = true;
     _userAnswers.add(AnswerData(isCorrect: false)); // タイムアウトは不正解として記録
+    _playIncorrectSound(); // 不正解音を再生
     _showAnswerDialog(false);
   }
 
@@ -115,9 +125,17 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
     _isAnswerLocked = true;
     _timer?.cancel();
     _timerController.stop();
-    _selectedAnswerIndex = index;
+    _selectedAnswerIndex = index; // ユーザーが選択した、シャッフル後のリストにおけるインデックス
     
-    _isCorrect = index == _questions[_questionIndex].correct;
+    // ユーザーが選択した回答のテキスト（シャッフル後のリストから取得）
+    String userAnswerText = _shuffledAnswers[index];
+    
+    // 正解の回答テキスト（元の問題データから取得）
+    // _questions[_questionIndex].correct は、元のanswersリストにおける正解のインデックス
+    String correctAnswerText = _questions[_questionIndex].answers[_questions[_questionIndex].correct];
+    
+    _isCorrect = (userAnswerText == correctAnswerText);
+
     _userAnswers.add(AnswerData(isCorrect: _isCorrect!)); // 回答結果を記録
     if (_isCorrect!) {
       _score++;
@@ -212,6 +230,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
                         _saveScore();
                         _finishQuiz();
                       } else {
+                        _shuffleAnswers(); // 次の質問の選択肢をシャッフル
                         _startTimer();
                       }
                     });
@@ -254,21 +273,11 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
   }
 
   Future<void> _playCorrectSound() async {
-    // TODO: 正解時の効果音ファイルパスを指定してください (例: 'sounds/correct.mp3')
-    // await _audioPlayer.play(AssetSource('YOUR_CORRECT_SOUND_FILE_PATH'));
-    // 例:
-    // await _audioPlayer.play(AssetSource('sounds/correct.mp3'));
-    // 現在はプレースホルダーとしてログ出力をします
-    print("Playing correct sound");
+    await _audioPlayer.play(AssetSource('sounds/correct.mp3'));
   }
 
   Future<void> _playIncorrectSound() async {
-    // TODO: 不正解時の効果音ファイルパスを指定してください (例: 'sounds/incorrect.mp3')
-    // await _audioPlayer.play(AssetSource('YOUR_INCORRECT_SOUND_FILE_PATH'));
-    // 例:
-    // await _audioPlayer.play(AssetSource('sounds/incorrect.mp3'));
-    // 現在はプレースホルダーとしてログ出力をします
-    print("Playing incorrect sound");
+    await _audioPlayer.play(AssetSource('sounds/incorrect.mp3'));
   }
 
   Future<void> _finishQuiz() async { // Future<void> に変更し、async を追加
@@ -303,12 +312,19 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
 
     setState(() {
       _lifelines.fiftyFifty = false;
-      // 正解以外の選択肢から2つをランダムに選んで非表示にする
-      final wrongAnswers = List<int>.generate(4, (i) => i)
-          .where((i) => i != _questions[_questionIndex].correct)
-          .toList()
-        ..shuffle();
-      _hiddenAnswerIndices = wrongAnswers.take(2).toList();
+      // 正解の選択肢のテキストを取得
+      String correctAnswerText = _questions[_questionIndex].answers[_questions[_questionIndex].correct];
+      
+      // シャッフルされた選択肢の中から、正解ではない選択肢のインデックスを取得
+      List<int> wrongAnswerIndicesInShuffled = [];
+      for (int i = 0; i < _shuffledAnswers.length; i++) {
+        if (_shuffledAnswers[i] != correctAnswerText) {
+          wrongAnswerIndicesInShuffled.add(i);
+        }
+      }
+      wrongAnswerIndicesInShuffled.shuffle();
+      // _hiddenAnswerIndices には、シャッフル後のリストにおけるインデックスを保存する
+      _hiddenAnswerIndices = wrongAnswerIndicesInShuffled.take(2).toList();
     });
   }
 
@@ -561,69 +577,72 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
         body: SafeArea(
           child: _isLoading
             ? Center(child: CircularProgressIndicator())
-            : Stack(
-                children: [
-                  // 背景グラデーション＋装飾
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF4A148C), // deep purple
-                          Color(0xFF1976D2), // blue
-                          Color(0xFF26A69A), // teal
+            : _questionIndex >= _questions.length // ★ 修正: クイズが終了したかどうかのチェックを追加
+                ? Center(child: CircularProgressIndicator()) // クイズ終了後の遷移待ちの間はローディング表示
+                : Stack(
+                    children: [
+                      // 背景グラデーション＋装飾
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF4A148C), // deep purple
+                              Color(0xFF1976D2), // blue
+                              Color(0xFF26A69A), // teal
+                            ],
+                          ),
+                        ),
+                      ),
+                      // 半透明の円や波模様を重ねる
+                      Positioned(
+                        top: -80,
+                        left: -80,
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.08),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: -60,
+                        right: -60,
+                        child: Container(
+                          width: 160,
+                          height: 160,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.10),
+                          ),
+                        ),
+                      ),
+                      // メインコンテンツ
+                      Column(
+                        children: [
+                          _buildProgressBar(),
+                          SizedBox(height: 10),
+                          _buildTimer(),
+                          SizedBox(height: 20),
+                          _buildLifelineButtons(),
+                          SizedBox(height: 20),
+                          _buildQuestionCard(),
+                          SizedBox(height: 20),
+                          _buildAnswerOptions(),
                         ],
                       ),
-                    ),
-                  ),
-                  // 半透明の円や波模様を重ねる
-                  Positioned(
-                    top: -80,
-                    left: -80,
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.08),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -60,
-                    right: -60,
-                    child: Container(
-                      width: 160,
-                      height: 160,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.10),
-                      ),
-                    ),
-                  ),
-                  // メインコンテンツ
-                  Column(
-                    children: [
-                      _buildProgressBar(),
-                      SizedBox(height: 10),
-                      _buildTimer(),
-                      SizedBox(height: 20),
-                      _buildLifelineButtons(),
-                      SizedBox(height: 20),
-                      _buildQuestionCard(),
-                      SizedBox(height: 20),
-                      _buildAnswerOptions(),
                     ],
                   ),
-                ],
-              ),
         ),
       ),
     );
   }
 
   Widget _buildProgressBar() {
+    if (_questions.isEmpty || _questionIndex >= _questions.length) return SizedBox.shrink(); // ★ 修正: 範囲外アクセスの防止
     return Container(
       height: 10,
       decoration: BoxDecoration(
@@ -653,6 +672,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildTimer() {
+    if (_questions.isEmpty || _questionIndex >= _questions.length) return SizedBox.shrink(); // ★ 修正: 範囲外アクセスの防止
     return Column(
       children: [
         Stack(
@@ -693,6 +713,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildQuestionCard() {
+    if (_questions.isEmpty || _questionIndex >= _questions.length) return SizedBox.shrink(); // ★ 修正: 範囲外アクセスの防止
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -715,10 +736,11 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildAnswerOptions() {
-    final answers = _questions[_questionIndex].answers;
+    if (_questions.isEmpty || _questionIndex >= _questions.length || _shuffledAnswers.isEmpty) return SizedBox.shrink(); // ★ 修正: 範囲外アクセスと空リストの防止
+    // final answers = _questions[_questionIndex].answers; // 削除: _shuffledAnswers を使用
     return Expanded(
       child: ListView.builder(
-        itemCount: answers.length,
+        itemCount: _shuffledAnswers.length, // 修正: _shuffledAnswers の長さを参照
         itemBuilder: (context, index) {
           if (_hiddenAnswerIndices.contains(index)) {
             return SizedBox.shrink(); // 50:50で隠された選択肢
@@ -726,11 +748,12 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
 
           final bool isSelected = _selectedAnswerIndex == index;
           final bool showResult = _isAnswerLocked && isSelected;
-          final bool isCorrect = index == _questions[_questionIndex].correct;
+          // final bool isCorrect = index == _questions[_questionIndex].correct; // 削除: この判定はシャッフルに対応していない
           
           Color? cardColor;
           if (showResult) {
-            cardColor = isCorrect ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3);
+            // 修正: state変数 _isCorrect を使用して、ユーザーの選択が正しかったかどうかに基づいて色を決定
+            cardColor = _isCorrect! ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3);
           } else {
             cardColor = Colors.white.withOpacity(0.9);
           }
@@ -775,7 +798,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
                       SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          answers[index],
+                          _shuffledAnswers[index], // 修正: シャッフルされた選択肢のテキストを表示
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.grey[800],
@@ -785,8 +808,10 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
                       ),
                       if (showResult)
                         Icon(
-                          isCorrect ? Icons.check_circle : Icons.cancel,
-                          color: isCorrect ? Colors.green : Colors.red,
+                          // 修正: state変数 _isCorrect を使用してアイコンを決定
+                          _isCorrect! ? Icons.check_circle : Icons.cancel,
+                          // 修正: state変数 _isCorrect を使用してアイコンの色を決定
+                          color: _isCorrect! ? Colors.green : Colors.red,
                         ),
                     ],
                   ),
