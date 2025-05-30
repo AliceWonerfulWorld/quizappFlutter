@@ -300,7 +300,8 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
                           ),
                           SizedBox(height: 20),
                           Text(
-                            'タイトルに戻りますか？\n獲得したコインは保存されません。',
+                            'タイトルに戻りますか？\n進行中のゲームは保存されません。',
+                            textScaleFactor: 1.2,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'MPLUSRounded1c',

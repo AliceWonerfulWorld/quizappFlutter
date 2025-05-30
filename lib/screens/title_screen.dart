@@ -199,104 +199,71 @@ class _TitleScreenState extends State<TitleScreen> with TickerProviderStateMixin
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  AnimatedBuilder(
-                    animation: _controller,
-                    builder: (context, child) {
-                      return Opacity(
-                        opacity: _iconAnimation.value.clamp(0.0, 1.0),
-                        child: Transform.scale(
-                          scale: _iconAnimation.value.clamp(0.0, 1.0),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(35),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 25,
-                            spreadRadius: 3,
-                            offset: Offset(0, 12),
-                          ),
-                        ],
+                  ScaleTransition(
+                    scale: _iconAnimation,
+                    child: Icon(Icons.emoji_events_rounded, size: 120, color: Colors.amber.shade300),
+                  ),
+                  SizedBox(height: 20),
+                  FadeTransition(
+                    opacity: _titleAnimation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(begin: Offset(0, -0.5), end: Offset.zero).animate(
+                        CurvedAnimation(parent: _controller, curve: Interval(0.2, 0.7, curve: Curves.easeOutBack)),
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 50, vertical: 40),
-                      child: Column(
-                        children: [
-                          Icon(Icons.emoji_events_outlined, size: 80, color: Colors.amber.shade600),
-                          SizedBox(height: 25),
-                          AnimatedBuilder(
-                            animation: _titleAnimation,
-                            builder: (context, child) {
-                              return Opacity(
-                                opacity: _titleAnimation.value.clamp(0.0, 1.0),
-                                child: Transform.translate(
-                                  offset: Offset(0, 40 * (1 - _titleAnimation.value)),
-                                  child: child,
-                                  ),
-                                );
-                            },
-                            child: ShaderMask(
-                              blendMode: BlendMode.srcIn,
-                              shaderCallback: (Rect bounds) {
-                                return LinearGradient(
-                                  colors: [Color(0xFFDA4453), Color(0xFF89216B)],
-                                ).createShader(bounds);
-                              },
-                              child: Text(
-                                'クイズマスター',
-                                style: TextStyle(
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 3.0,
-                                  fontFamily: 'YourCustomFont',
-                                  shadows: [
-                                    Shadow(
-                                      blurRadius: 5.0,
-                                      color: Colors.black.withOpacity(0.3),
-                                      offset: Offset(2.0, 2.0),
-                                    ),
-                                  ],
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
+                      child: Text(
+                        'クイズマスター',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 52,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontFamily: 'MPLUSRounded1c', // 既存のフォント
+                          shadows: [
+                            Shadow(
+                              blurRadius: 10.0,
+                              color: Colors.black.withOpacity(0.3),
+                              offset: Offset(2.0, 2.0),
                             ),
-                          ),
-                          SizedBox(height: 15),
-                          AnimatedBuilder(
-                            animation: _subtitleAnimation,
-                            builder: (context, child) {
-                              return Opacity(
-                                opacity: _subtitleAnimation.value.clamp(0.0, 1.0),
-                                child: Transform.translate(
-                                  offset: Offset(0, 20 * (1 - _subtitleAnimation.value)),
-                                  child: Transform.scale(
-                                    scale: 0.8 + (0.2 * _subtitleAnimation.value.clamp(0.0, 1.0)),
-                                    child: child,
-                                  ),
-                                 ),
-                                );
-                            },
-                            child: Text(
-                              '知識で遊ぼう！',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w300,
-                                color: Colors.black.withOpacity(0.85),
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  SizedBox(height: 50),
+                  SizedBox(height: 15),
+                  FadeTransition(
+                    opacity: _subtitleAnimation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(begin: Offset(0, 0.8), end: Offset.zero).animate(
+                        CurvedAnimation(parent: _controller, curve: Interval(0.5, 1.0, curve: Curves.easeOut)) // 少し遅れて開始、スムーズに
+                      ),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        decoration: BoxDecoration(
+                          // color: Colors.black.withOpacity(0.2), // 背景を少し暗くしてテキストを際立たせる
+                          // borderRadius: BorderRadius.circular(20), // 角を丸くする
+                        ),
+                        child: Text(
+                          '知識で遊ぼう！',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 25,
+                            color: Colors.white.withOpacity(0.9),
+                            fontFamily: 'MPLUSRounded1c', // MPLUSRounded1c-Regular を指定
+                            fontWeight: FontWeight.normal, // Regularウェイトを指定
+                            letterSpacing: 1.2, // 文字間隔を調整
+                            shadows: [
+                              Shadow(
+                                blurRadius: 8.0,
+                                color: Colors.black.withOpacity(0.4),
+                                offset: Offset(1.5, 1.5),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 60),
                   buildMenuButton(
                     context,
                     'スタート',
