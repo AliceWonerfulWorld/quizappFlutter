@@ -4,6 +4,8 @@ import 'dart:math';
 import '../coin_manager.dart'; // CoinManagerをインポート
 
 class SlotMachineScreen extends StatefulWidget {
+  const SlotMachineScreen({Key? key}) : super(key: key); // Key? key を追加
+
   @override
   _SlotMachineScreenState createState() => _SlotMachineScreenState();
 }
@@ -430,6 +432,9 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
                     mainAxisSize: MainAxisSize.min,
                     children: List<Widget>.generate(3, (index) {
                       return Container(
+                        width: 80, // 固定幅を設定
+                        height: 80, // 固定高さを設定
+                        alignment: Alignment.center, // 中央揃えを追加
                         margin: EdgeInsets.symmetric(horizontal: 10),
                         padding: EdgeInsets.all(15),
                         decoration: BoxDecoration(
@@ -482,7 +487,7 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
                   ],
                 ),
                 SizedBox(height: 20),
-                // リール停止ボタンを追加
+                // リール停止ボタンを更新
                 if (_isSpinning)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -490,15 +495,15 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
                       return ElevatedButton(
                         onPressed: reelStopped[index] ? null : () => stopReel(index),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
+                          backgroundColor: Colors.amber.shade700,
+                          shape: CircleBorder(), // const を削除
+                          padding: EdgeInsets.all(20), // const を削除
+                          elevation: 5,
                         ),
-                        child: Text(
-                          'リール ${index + 1} 停止',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        child: Icon(
+                          Icons.stop_circle_outlined,
+                          color: Colors.white,
+                          size: 30,
                         ),
                       );
                     }),
@@ -534,19 +539,19 @@ class _SlotMachineScreenState extends State<SlotMachineScreen> with TickerProvid
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _buildPayoutRow('🍒🍒🍒', '50コイン'),
-                          SizedBox(width: 20),
-                          _buildPayoutRow('その他', '30コイン')
+                          SizedBox(width: 20), // const を削除
+                          _buildPayoutRow('その他', '30コイン'),
                         ],
                       ),
                     ],
-                  ),
-                ),
+                  ), // Column を閉じる
+                ),   // Container を閉じる
               ],
-            ),
-          ),
-        ),
-      ),
-    );
+            ), // Center の中の Column を閉じる
+          ),   // Center を閉じる
+        ),     // SafeArea を閉じる
+      ),       // body の Container を閉じる
+    ); // Scaffold を閉じる
   }
 
   Widget _buildPayoutRow(String symbols, String payout) {
